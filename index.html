@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mini App Récompenses</title>
+
+  <!-- 1. Script officiel Telegram WebApp -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <!-- 2. SDK AdsGram officiel -->
+  <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+
+  <style>
+    body {
+      background-color: #18222d;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 30px 15px;
+      margin: 0;
+    }
+    .container {
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    .score-box {
+      background: #232e3c;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 25px;
+    }
+    .points {
+      font-size: 32px;
+      font-weight: bold;
+      color: #00aff0;
+    }
+    button {
+      background-color: #0088cc;
+      color: white;
+      border: none;
+      padding: 16px 24px;
+      font-size: 17px;
+      font-weight: bold;
+      border-radius: 10px;
+      cursor: pointer;
+      width: 100%;
+    }
+    button:active {
+      background-color: #006699;
+    }
+    #status {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #aaaaaa;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="score-box">
+      <div>Tes Points :</div>
+      <div class="points" id="balance">0</div>
+    </div>
+
+    <button id="ad-btn" onclick="showRewardedAd()">Regarder une pub (+100 pts)</button>
+    <div id="status"></div>
+  </div>
+
+  <script>
+    // Initialise l'environnement Telegram
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
+
+    let userBalance = 0;
+
+    // Initialise le contrôleur AdsGram avec ton Block ID
+    const AdController = window.Adsgram.init({ 
+      blockId: "METS_TON_BLOCK_ID_ICI" 
+    });
+
+    function showRewardedAd() {
+      const status = document.getElementById("status");
+      status.innerText = "Chargement de l'annonce...";
+
+      AdController.show().then((result) => {
+        // La vidéo a été vue jusqu'au bout
+        userBalance += 100;
+        document.getElementById("balance").innerText = userBalance;
+        status.innerText = "Récompense attribuée (+100 pts) !";
+      }).catch((error) => {
+        // L'utilisateur a fermé la pub avant la fin ou aucune pub n'était dispo
+        status.innerText = "Pub non validée ou interrompue.";
+        console.error("Détails AdsGram :", error);
+      });
+    }
+  </script>
+
+</body>
+</html>
