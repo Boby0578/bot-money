@@ -1,0 +1,2 @@
+# bot-money
+Earn money
