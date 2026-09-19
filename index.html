@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mini App Récompenses</title>
 
-  <!-- 1. Script officiel Telegram WebApp -->
+  <!-- Script officiel Telegram WebApp -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <!-- 2. SDK AdsGram officiel -->
+  <!-- SDK AdsGram officiel -->
   <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
 
   <style>
@@ -76,23 +76,23 @@
 
     let userBalance = 0;
 
-    // Initialise le contrôleur AdsGram avec ton Block ID
+    // Initialise AdsGram avec ton Block ID
     const AdController = window.Adsgram.init({ 
-      blockId: "METS_TON_BLOCK_ID_ICI" 
+      blockId: "48635" 
     });
 
     function showRewardedAd() {
       const status = document.getElementById("status");
-      status.innerText = "Chargement de l'annonce...";
+      status.innerText = "Chargement de la vidéo...";
 
       AdController.show().then((result) => {
-        // La vidéo a été vue jusqu'au bout
+        // La pub a été vue jusqu'au bout
         userBalance += 100;
         document.getElementById("balance").innerText = userBalance;
-        status.innerText = "Récompense attribuée (+100 pts) !";
+        status.innerText = "Bravo ! Récompense attribuée (+100 pts).";
       }).catch((error) => {
-        // L'utilisateur a fermé la pub avant la fin ou aucune pub n'était dispo
-        status.innerText = "Pub non validée ou interrompue.";
+        // Annonce fermée trop tôt ou non disponible
+        status.innerText = "Vidéo non validée ou interrompue.";
         console.error("Détails AdsGram :", error);
       });
     }
