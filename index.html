@@ -3,16 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Validation en cours...</title>
+  <title>Validation...</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
 
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       background-color: #0b132b;
       color: #ffffff;
@@ -26,86 +22,43 @@
       text-align: center;
       padding: 20px;
     }
-
     #overlay-attente {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0; width: 100%; height: 100%;
       background: #0b132b;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
       z-index: 999;
       cursor: pointer;
     }
-
     .chrono-cercle {
-      width: 90px;
-      height: 90px;
-      border-radius: 50%;
-      border: 4px solid #1c2541;
-      border-top: 4px solid #48cae4;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      font-weight: bold;
-      color: #48cae4;
+      width: 90px; height: 90px; border-radius: 50%;
+      border: 4px solid #1c2541; border-top: 4px solid #48cae4;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; font-weight: bold; color: #48cae4;
       margin-bottom: 25px;
       animation: spin 1.2s linear infinite;
     }
-
-    .chrono-chiffre {
-      animation: anti-spin 1.2s linear infinite;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    @keyframes anti-spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(-360deg); }
-    }
-
-    .texte-statut {
-      font-size: 16px;
-      color: #cbd5e1;
-      max-width: 280px;
-      line-height: 1.5;
-    }
-
+    .chrono-chiffre { animation: anti-spin 1.2s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @keyframes anti-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(-360deg); } }
+    .texte-statut { font-size: 16px; color: #cbd5e1; max-width: 280px; line-height: 1.5; }
     #zone-succes {
-      display: none;
-      background: #1c2541;
-      border: 2px solid #2ec4b6;
-      border-radius: 12px;
-      padding: 25px 20px;
-      max-width: 320px;
-      width: 100%;
+      display: none; background: #1c2541; border: 2px solid #2ec4b6;
+      border-radius: 12px; padding: 25px 20px; max-width: 320px; width: 100%;
     }
-
     .badge-code {
-      background: #0b132b;
-      border: 2px dashed #2ec4b6;
-      color: #2ec4b6;
-      font-size: 26px;
-      font-weight: bold;
-      letter-spacing: 3px;
-      padding: 12px;
-      border-radius: 8px;
-      margin: 15px 0;
-      user-select: all;
+      background: #0b132b; border: 2px dashed #2ec4b6; color: #2ec4b6;
+      font-size: 22px; font-weight: bold; letter-spacing: 2px;
+      padding: 12px; border-radius: 8px; margin: 15px 0; user-select: all;
+    }
+    .btn-copier {
+      background: #2ec4b6; color: #0b132b; border: none; font-weight: bold;
+      padding: 10px 18px; border-radius: 6px; font-size: 14px; cursor: pointer;
     }
   </style>
 </head>
 <body>
 
-  <!-- Écran de chargement et compte à rebours 30s -->
   <div id="overlay-attente">
     <div class="chrono-cercle">
       <span class="chrono-chiffre" id="valeur-timer">30</span>
@@ -113,12 +66,11 @@
     <p class="texte-statut" id="texte-statut">Lancement automatique de la vidéo...</p>
   </div>
 
-  <!-- Écran de validation final -->
   <div id="zone-succes">
     <h2 style="color: #2ec4b6; margin-bottom: 8px;">✅ Tâche validée</h2>
-    <p style="font-size: 14px; color: #94a3b8;">Code de confirmation :</p>
-    <div class="badge-code" id="code-affiche">GAIN78</div>
-    <p style="font-size: 12px; color: #64748b;">Colle ce code sur Aviso pour recevoir ta récompense.</p>
+    <p style="font-size: 14px; color: #94a3b8;">Ton code unique personnel :</p>
+    <div class="badge-code" id="code-affiche">GÉNÉRATION...</div>
+    <button class="btn-copier" onclick="copierCode()">Copier le code</button>
   </div>
 
   <script>
@@ -134,7 +86,6 @@
     let pubValidee = false;
     let pubLancee = false;
 
-    // Décompte du chronomètre de 30 secondes
     function demarrerChrono() {
       const interval = setInterval(() => {
         secondesRestantes--;
@@ -143,22 +94,33 @@
         if (secondesRestantes <= 0) {
           clearInterval(interval);
           timerFini = true;
-          verifierValidation();
+          finaliserValidation();
         }
       }, 1000);
     }
 
-    // Affiche le code UNIQUEMENT si la vidéo ET les 30 secondes sont terminées
-    function verifierValidation() {
+    // Génère un code unique par utilisateur et par session
+    function genererCodeUnique() {
+      const tg = window.Telegram?.WebApp;
+      const userId = tg?.initDataUnsafe?.user?.id || Math.floor(1000 + Math.random() * 9000);
+      const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase();
+      const datePart = Date.now().toString().slice(-3);
+
+      // Format : AV-[PartieAléatoire]-[DerniersChiffresID/Date] (ex: AV-9B2F-481)
+      return `AV-${randomPart}-${datePart}`;
+    }
+
+    function finaliserValidation() {
       if (pubValidee && timerFini) {
+        const codeUnique = genererCodeUnique();
+        document.getElementById('code-affiche').innerText = codeUnique;
         document.getElementById('overlay-attente').style.display = 'none';
         document.getElementById('zone-succes').style.display = 'block';
       } else if (pubValidee && !timerFini) {
-        document.getElementById('texte-statut').innerText = "Vidéo terminée. Validation en cours du délai...";
+        document.getElementById('texte-statut').innerText = "Vidéo vue. Attente de la fin du compteur...";
       }
     }
 
-    // Déclenchement de la pub
     function lancerPubAuto() {
       if (pubLancee) return;
       pubLancee = true;
@@ -166,24 +128,23 @@
       demarrerChrono();
 
       AdController.show()
-        .then((result) => {
-          // L'utilisateur a bien visionné la vidéo jusqu'à la fin
+        .then(() => {
           pubValidee = true;
-          verifierValidation();
+          finaliserValidation();
         })
-        .catch((err) => {
-          // Vidéo quittée ou coupée : la validation est bloquée
+        .catch(() => {
           pubLancee = false;
-          document.getElementById('texte-statut').innerText = "Vidéo interrompue. Appuyez ici pour relancer.";
+          document.getElementById('texte-statut').innerText = "Vidéo interrompue. Touchez pour relancer.";
         });
     }
 
-    // Lancement automatique dès le chargement
-    window.addEventListener('DOMContentLoaded', () => {
-      setTimeout(lancerPubAuto, 400);
-    });
+    function copierCode() {
+      const texte = document.getElementById('code-affiche').innerText;
+      navigator.clipboard.writeText(texte);
+      alert("Code copié : " + texte);
+    }
 
-    // Déclenchement au premier toucher si le navigateur bloque l'autoplay direct
+    window.addEventListener('DOMContentLoaded', () => setTimeout(lancerPubAuto, 400));
     const calque = document.getElementById('overlay-attente');
     calque.addEventListener('click', lancerPubAuto);
     calque.addEventListener('touchstart', lancerPubAuto);
