@@ -2,101 +2,191 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mini App Récompenses</title>
-
-  <!-- Script officiel Telegram WebApp -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Validation en cours...</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-  <!-- SDK AdsGram officiel -->
   <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
 
   <style>
-    body {
-      background-color: #18222d;
-      color: #ffffff;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 30px 15px;
+    * {
+      box-sizing: border-box;
       margin: 0;
+      padding: 0;
     }
-    .container {
-      max-width: 400px;
-      margin: 0 auto;
-    }
-    .score-box {
-      background: #232e3c;
+    body {
+      background-color: #0b132b;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+      text-align: center;
       padding: 20px;
-      border-radius: 12px;
-      margin-bottom: 25px;
     }
-    .points {
-      font-size: 32px;
-      font-weight: bold;
-      color: #00aff0;
-    }
-    button {
-      background-color: #0088cc;
-      color: white;
-      border: none;
-      padding: 16px 24px;
-      font-size: 17px;
-      font-weight: bold;
-      border-radius: 10px;
+
+    #overlay-attente {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #0b132b;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
       cursor: pointer;
+    }
+
+    .chrono-cercle {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      border: 4px solid #1c2541;
+      border-top: 4px solid #48cae4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: bold;
+      color: #48cae4;
+      margin-bottom: 25px;
+      animation: spin 1.2s linear infinite;
+    }
+
+    .chrono-chiffre {
+      animation: anti-spin 1.2s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes anti-spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(-360deg); }
+    }
+
+    .texte-statut {
+      font-size: 16px;
+      color: #cbd5e1;
+      max-width: 280px;
+      line-height: 1.5;
+    }
+
+    #zone-succes {
+      display: none;
+      background: #1c2541;
+      border: 2px solid #2ec4b6;
+      border-radius: 12px;
+      padding: 25px 20px;
+      max-width: 320px;
       width: 100%;
     }
-    button:active {
-      background-color: #006699;
-    }
-    #status {
-      margin-top: 15px;
-      font-size: 14px;
-      color: #aaaaaa;
+
+    .badge-code {
+      background: #0b132b;
+      border: 2px dashed #2ec4b6;
+      color: #2ec4b6;
+      font-size: 26px;
+      font-weight: bold;
+      letter-spacing: 3px;
+      padding: 12px;
+      border-radius: 8px;
+      margin: 15px 0;
+      user-select: all;
     }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <div class="score-box">
-      <div>Tes Points :</div>
-      <div class="points" id="balance">0</div>
+  <!-- Écran de chargement et compte à rebours 30s -->
+  <div id="overlay-attente">
+    <div class="chrono-cercle">
+      <span class="chrono-chiffre" id="valeur-timer">30</span>
     </div>
+    <p class="texte-statut" id="texte-statut">Lancement automatique de la vidéo...</p>
+  </div>
 
-    <button id="ad-btn" onclick="showRewardedAd()">Regarder une pub (+100 pts)</button>
-    <div id="status"></div>
+  <!-- Écran de validation final -->
+  <div id="zone-succes">
+    <h2 style="color: #2ec4b6; margin-bottom: 8px;">✅ Tâche validée</h2>
+    <p style="font-size: 14px; color: #94a3b8;">Code de confirmation :</p>
+    <div class="badge-code" id="code-affiche">GAIN78</div>
+    <p style="font-size: 12px; color: #64748b;">Colle ce code sur Aviso pour recevoir ta récompense.</p>
   </div>
 
   <script>
-    // Initialise l'environnement Telegram
-    const tg = window.Telegram.WebApp;
-    tg.ready();
-    tg.expand();
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.ready();
+      window.Telegram.WebApp.expand();
+    }
 
-    let userBalance = 0;
+    const AdController = window.Adsgram.init({ blockId: "48635" });
 
-    // Initialise AdsGram avec ton Block ID
-    const AdController = window.Adsgram.init({ 
-      blockId: "48635" 
+    let secondesRestantes = 30;
+    let timerFini = false;
+    let pubValidee = false;
+    let pubLancee = false;
+
+    // Décompte du chronomètre de 30 secondes
+    function demarrerChrono() {
+      const interval = setInterval(() => {
+        secondesRestantes--;
+        document.getElementById('valeur-timer').innerText = secondesRestantes;
+
+        if (secondesRestantes <= 0) {
+          clearInterval(interval);
+          timerFini = true;
+          verifierValidation();
+        }
+      }, 1000);
+    }
+
+    // Affiche le code UNIQUEMENT si la vidéo ET les 30 secondes sont terminées
+    function verifierValidation() {
+      if (pubValidee && timerFini) {
+        document.getElementById('overlay-attente').style.display = 'none';
+        document.getElementById('zone-succes').style.display = 'block';
+      } else if (pubValidee && !timerFini) {
+        document.getElementById('texte-statut').innerText = "Vidéo terminée. Validation en cours du délai...";
+      }
+    }
+
+    // Déclenchement de la pub
+    function lancerPubAuto() {
+      if (pubLancee) return;
+      pubLancee = true;
+
+      demarrerChrono();
+
+      AdController.show()
+        .then((result) => {
+          // L'utilisateur a bien visionné la vidéo jusqu'à la fin
+          pubValidee = true;
+          verifierValidation();
+        })
+        .catch((err) => {
+          // Vidéo quittée ou coupée : la validation est bloquée
+          pubLancee = false;
+          document.getElementById('texte-statut').innerText = "Vidéo interrompue. Appuyez ici pour relancer.";
+        });
+    }
+
+    // Lancement automatique dès le chargement
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(lancerPubAuto, 400);
     });
 
-    function showRewardedAd() {
-      const status = document.getElementById("status");
-      status.innerText = "Chargement de la vidéo...";
-
-      AdController.show().then((result) => {
-        // La pub a été vue jusqu'au bout
-        userBalance += 100;
-        document.getElementById("balance").innerText = userBalance;
-        status.innerText = "Bravo ! Récompense attribuée (+100 pts).";
-      }).catch((error) => {
-        // Annonce fermée trop tôt ou non disponible
-        status.innerText = "Vidéo non validée ou interrompue.";
-        console.error("Détails AdsGram :", error);
-      });
-    }
+    // Déclenchement au premier toucher si le navigateur bloque l'autoplay direct
+    const calque = document.getElementById('overlay-attente');
+    calque.addEventListener('click', lancerPubAuto);
+    calque.addEventListener('touchstart', lancerPubAuto);
   </script>
-
 </body>
 </html>
